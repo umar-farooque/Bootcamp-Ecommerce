@@ -1,12 +1,18 @@
 import { IProduct } from "../components/Product.tsx";
 import { ProductCatalogue } from "../components/ProductCatalogue.tsx";
-import { useState } from "react";
-import { CartItem, ICart } from "../components/CartItem.tsx";
+import { ReactElement, useEffect, useState } from "react";
+import { ICart } from "../components/CartItem.tsx";
+import { CartProvider, useCart } from "../context/CartContext";
+import Cart from "../components/Cart.tsx";
 
-export function Home() {
-  const [cart, setCart] = useState<ICart[]>([]);
-  const [products, setProduct] = useState([]);
+export function Home(): ReactElement {
+  const { cart, setCart } = useCart()!;
 
+  const [products, setProducts] = useState<IProduct[]>();
+
+  useEffect(() => {
+    setProducts([{ name: "Apple", imgURL: "", price: 100 }]);
+  }, []);
   const handleAddProduct = ({ name, price }: IProduct) => {
     let newCart = [...cart];
     newCart = newCart.map((cart) => {
@@ -21,44 +27,15 @@ export function Home() {
     setCart(newCart);
   };
 
-  const handleSetCount = (type: "add" | "remove", name: string) => {
-    let newCart = [...cart];
-    newCart = newCart.map((cart) => {
-      if (cart.name === name) {
-        if (cart.count === 0) {
-          return cart;
-        }
-        return { ...cart, count: type === "add" ? ++cart.count : --cart.count };
-      }
-      return cart;
-    });
-    newCart = newCart.filter((cart) => cart.count !== 0);
-    setCart(newCart);
-  };
-
   return (
-    <main>
-      {products && (
+    <CartProvider>
+      <main>
         <ProductCatalogue
-          products={products}
+          products={products!}
           onProductClick={handleAddProduct}
         />
-      )}
-
-      <div>
-        {cart.length > 0 &&
-          cart.map((product) => {
-            return (
-              <CartItem
-                key={product.name}
-                setCount={handleSetCount}
-                name={product.name}
-                price={product.price}
-                count={product.count}
-              />
-            );
-          })}
-      </div>
-    </main>
+        <Cart />
+      </main>
+    </CartProvider>
   );
 }
